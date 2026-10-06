@@ -157,6 +157,17 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
 #dev b{cursor:grab;touch-action:none;user-select:none;font-size:1.3rem;text-align:center;line-height:1}
 #dev b:active{cursor:grabbing}
 #dev.min{width:auto!important;padding:6px 12px}
+#setm>div{width:min(92%,440px)}
+#setm h2{position:relative}
+#setX{position:absolute;top:50%;right:12px;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#d63031;font-size:1.1rem;font-weight:700;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25);line-height:1;padding:0}
+#setX:active{transform:translateY(-50%) scale(.92)}
+#tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+#tabs button{flex:1 1 30%;padding:8px 4px;border:0;border-radius:12px;background:var(--cardbg);color:var(--ink);font-weight:600;cursor:pointer;box-shadow:0 4px 0 var(--cardbd);font-size:.85rem}
+#tabs button.sel{background:var(--ok);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.pane{display:none}.pane.on{display:block}
+.vol{display:flex;align-items:center;gap:10px;margin:8px 0;font-weight:600}
+.vol input{flex:1;accent-color:var(--hdr2)}
+#musToggle{width:100%;padding:8px;border:0;border-radius:12px;background:var(--hdr2);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.2);margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -173,10 +184,20 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
 
 <div id="toast"></div>
 <div id="setm" style="display:none"><div>
-  <h2>⚙️ Settings</h2>
-  <div class="sec">Theme</div><div id="themeRow"></div>
-  <div class="sec">Characters</div><div id="chList"></div>
-  <div class="sec">Backgrounds</div><div id="bgList"></div>
+  <h2>⚙️ Settings<button id="setX" aria-label="Close settings">✕</button></h2>
+  <div id="tabs"></div>
+  <div class="pane" data-pane="bg"><div id="bgList"></div></div>
+  <div class="pane" data-pane="kids"><div id="chList"></div></div>
+  <div class="pane" data-pane="cursor"><div class="sec">Pick a cursor (all free)</div><div id="curList"></div></div>
+  <div class="pane" data-pane="music">
+    <button id="musToggle">🎵 Music: On</button>
+    <div class="sec">Music style (all free)</div><div id="moodList"></div>
+    <div class="sec">Volume</div>
+    <label class="vol">🎵 Music <input type="range" id="mvol" min="0" max="1" step=".05"></label>
+    <label class="vol">🔊 Effects <input type="range" id="svol" min="0" max="1" step=".05"></label>
+  </div>
+  <div class="pane" data-pane="ach"><div class="sec" id="achSum"></div><div id="achList"></div></div>
+  <div class="pane" data-pane="theme"><div class="sec">Theme</div><div id="themeRow"></div></div>
   <button id="setClose">Done</button>
 </div></div>
 
@@ -213,7 +234,7 @@ const UPG=[
  {id:'crayon',n:'Golden Crayons',d:'Clicks gain +1% of your Kids/sec',base:2000,g:2.2},
  {id:'teacher',n:'Teacher Training',d:'+10% to all Kids/sec',base:800,g:2.5}
 ];
-const S={name:'',kids:0,b:{},u:{},dip:0,total:0,bus:0,ach:{},snd:true,last:0,bgs:{meadow:1},bg:'meadow',theme:'auto',chars:{mix:1},ch:'mix',music:true};
+const S={name:'',kids:0,b:{},u:{},dip:0,total:0,bus:0,ach:{},snd:true,last:0,bgs:{meadow:1},bg:'meadow',theme:'auto',chars:{mix:1},ch:'mix',music:true,mood:'chill',mvol:.7,svol:.5,cur:'def',clicks:0};
 BUILD.forEach(x=>S.b[x.id]=0);UPG.forEach(x=>S.u[x.id]=0);
 const cost=(base,g,c)=>Math.floor(base*Math.pow(g,c));
 const bCost=x=>cost(x.base,1.15,S.b[x.id]);
@@ -229,7 +250,20 @@ function fmt(n){
 }
 const ACH=[1e2,1e4,1e6,1e8,1e10,1e12].map(v=>({id:'t'+v,n:fmt(v)+' Club',d:'Earn '+fmt(v)+' kids in one run',ok:()=>S.total>=v}))
  .concat(BUILD.map(x=>({id:'b'+x.id,n:x.n+' Pro',d:'Own 10 '+x.n,ok:()=>S.b[x.id]>=10})))
- .concat([{id:'grad',n:'Graduate!',d:'Graduate for the first time',ok:()=>S.dip>=1},{id:'bus',n:'All Aboard',d:'Catch a Field Trip bus',ok:()=>S.bus>=1}]);
+ .concat([
+ {id:'grad',n:'Graduate!',d:'Graduate for the first time',ok:()=>S.dip>=1},
+ {id:'bus',n:'All Aboard',d:'Catch a Field Trip bus',ok:()=>S.bus>=1},
+ {id:'c100',n:'Warming Up',d:'Click 100 times',ok:()=>S.clicks>=100},
+ {id:'c1k',n:'Finger Workout',d:'Click 1,000 times',ok:()=>S.clicks>=1000},
+ {id:'c10k',n:'Clicking Champion',d:'Click 10,000 times',ok:()=>S.clicks>=10000},
+ {id:'hands10',n:'Strong Grip',d:'Buy 10 Stronger Hands',ok:()=>S.u.hands>=10},
+ {id:'allb',n:'Full Campus',d:'Own at least 1 of every building',ok:()=>BUILD.every(x=>S.b[x.id]>=1)},
+ {id:'chars3',n:'Dress-Up Day',d:'Own 3 characters',ok:()=>Object.keys(S.chars).length>=3},
+ {id:'bgs3',n:'Scenery Fan',d:'Own 3 backgrounds',ok:()=>Object.keys(S.bgs).length>=3},
+ {id:'kps1k',n:'Busy Bees',d:'Reach 1K kids per second',ok:()=>kpsNow()>=1000},
+ {id:'kps1m',n:'Kid Factory',d:'Reach 1M kids per second',ok:()=>kpsNow()>=1e6},
+ {id:'dip10',n:'Honor Roll',d:'Earn 10 diplomas',ok:()=>S.dip>=10}
+]);
 let devMult=1;
 const kpsNow=()=>BUILD.reduce((a,x)=>a+S.b[x.id]*x.kps,0)*(1+.1*S.u.teacher)*(1+.02*S.dip)*(1+.01*Object.keys(S.ach).length)*devMult;
 const clickPow=()=>(1+S.u.hands)*devMult+S.u.crayon*.01*kpsNow();
@@ -247,8 +281,6 @@ function buildShop(){
   UPG.forEach(x=>{const e=card(x.id,x.n,x.d);e.onclick=()=>buy('u',x);items.appendChild(e)});
   items.insertAdjacentHTML('beforeend','<div class="sec">Buildings</div>');
   BUILD.forEach(x=>{const e=card(x.id,x.n,`+${x.kps<1?x.kps:fmt(x.kps)} Kids per second`);e.onclick=()=>buy('b',x);items.appendChild(e)});
-  items.insertAdjacentHTML('beforeend','<div class="sec">Achievements (+1% production each)</div>');
-  ACH.forEach(a=>{const r=document.createElement('div');r.className='ach';r.id='a-'+a.id;items.appendChild(r)});
 }
 function buy(t,x){
   const c=t==='b'?bCost(x):uCost(x);
@@ -277,7 +309,7 @@ function render(){
 
 // ---------- clicking ----------
 $('kidBtn').addEventListener('click',e=>{
-  const p=clickPow();S.kids+=p;S.total+=p;clickSound();if(S.ch==='mix')$('kidBtn').textContent=['👦','👧','🧒','👶'][Math.random()*4|0];render();
+  const p=clickPow();S.kids+=p;S.total+=p;S.clicks++;clickSound();if(S.ch==='mix')$('kidBtn').textContent=['👦','👧','🧒','👶'][Math.random()*4|0];render();
   const t=document.createElement('div');t.className='float';t.textContent='+'+fmt(Math.max(p,1));
   const r=$('clickZone').getBoundingClientRect();
   t.style.left=(e.clientX-r.left-15)+'px';t.style.top=(e.clientY-r.top-15)+'px';
@@ -307,7 +339,7 @@ function beep(f,d){
   try{
     actx=actx||new (window.AudioContext||window.webkitAudioContext)();
     const o=actx.createOscillator(),g=actx.createGain();
-    o.type='triangle';o.frequency.value=f;g.gain.value=.04;
+    o.type='triangle';o.frequency.value=f;g.gain.value=.04*sfv();
     o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);
   }catch(e){}
 }
@@ -327,14 +359,14 @@ function ctx(){actx=actx||new (window.AudioContext||window.webkitAudioContext)()
 function tone(type,f0,f1,d,v,delay){
   const a=ctx(),t=a.currentTime+(delay||0),o=a.createOscillator(),g=a.createGain();
   o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+d);
-  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  g.gain.setValueAtTime(Math.max(v*sfv(),.0001),t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
   o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02);
 }
 function noise(d,v,freq){
   const a=ctx(),b=a.createBuffer(1,Math.floor(a.sampleRate*d),a.sampleRate),x=b.getChannelData(0);
   for(let i=0;i<x.length;i++)x[i]=(Math.random()*2-1)*(1-i/x.length);
   const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();
-  f.type='bandpass';f.frequency.value=freq;g.gain.value=v;
+  f.type='bandpass';f.frequency.value=freq;g.gain.value=v*sfv();
   s.buffer=b;s.connect(f);f.connect(g);g.connect(a.destination);s.start();
 }
 function clickSound(){
@@ -357,30 +389,136 @@ const PROG=[[57,60,64,67],[53,57,60,64],[48,55,59,64],[55,59,62,64]];
 const PENT=[69,72,74,76,79,81];
 let mTimer=null,mStep=0,mGain=null;
 const mf=n=>440*Math.pow(2,(n-69)/12);
+let mOut=null;
 function musicInit(){
   const a=ctx();if(mGain)return;
+  mOut=a.createGain();mOut.gain.value=S.mvol*1.4;mOut.connect(a.destination);
   mGain=a.createGain();mGain.gain.value=.5;
   const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;
   const dl=a.createDelay(1),fb=a.createGain();dl.delayTime.value=.43;fb.gain.value=.35;
   dl.connect(fb);fb.connect(dl);
-  mGain.connect(lp);lp.connect(a.destination);lp.connect(dl);dl.connect(a.destination);
+  mGain.connect(lp);lp.connect(mOut);lp.connect(dl);dl.connect(mOut);
 }
-function mNote(freq,t,d,v,type){
-  const o=actx.createOscillator(),g=actx.createGain();
+function mNote(freq,t,d,v,type,atk){
+  const o=actx.createOscillator(),g=actx.createGain(),a=atk||.08;
   o.type=type;o.frequency.value=freq;
-  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.08);g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o.connect(g);g.connect(mGain);o.start(t);o.stop(t+d+.05);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+Math.max(d,a+.05));
+  o.connect(g);g.connect(mGain);o.start(t);o.stop(t+Math.max(d,a+.05)+.05);
 }
+function mDrum(t,kind){
+  const a=actx;
+  if(kind==='k'){
+    const o=a.createOscillator(),g=a.createGain();
+    o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);
+    g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.0001,t+.18);
+    o.connect(g);g.connect(mOut);o.start(t);o.stop(t+.2);return;
+  }
+  const d=kind==='s'?.14:.04,b=a.createBuffer(1,Math.floor(a.sampleRate*d),a.sampleRate),x=b.getChannelData(0);
+  for(let i=0;i<x.length;i++)x[i]=(Math.random()*2-1)*(1-i/x.length);
+  const src=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();
+  f.type=kind==='s'?'bandpass':'highpass';f.frequency.value=kind==='s'?1800:7000;g.gain.value=kind==='s'?.09:.05;
+  src.buffer=b;src.connect(f);f.connect(g);g.connect(mOut);src.start(t);
+}
+const MOODS=[
+ {id:'chill',n:'Chill Pads',e:'🌙',beat:.86,prog:PROG,mel:PENT,pad:'triangle',pv:.035,atk:.08,stag:0,mp:.55},
+ {id:'lofi',n:'Lo-fi Beat',e:'☕',beat:.75,prog:[[50,57,60,65],[55,59,62,65],[48,55,59,64],[57,60,64,67]],mel:[62,65,67,69,72,74],pad:'triangle',pv:.04,atk:.05,stag:.02,mp:.4,drums:true},
+ {id:'box',n:'Music Box',e:'🎁',beat:.5,prog:[[60,64,67,72],[57,60,64,69],[53,57,60,65],[55,59,62,67]],mel:[72,74,76,79,81,84],arp:true,mp:.25},
+ {id:'piano',n:'Calm Piano',e:'🎹',beat:1,prog:[[48,55,64,67],[43,50,59,67],[45,52,60,64],[41,48,57,65]],mel:[72,74,76,79,81],pad:'sine',pv:.06,atk:.01,stag:.14,mp:.5,dec:2.5},
+ {id:'dream',n:'Dreamy Clouds',e:'☁️',beat:1.2,prog:[[52,59,64,71],[48,55,64,67],[45,52,60,69],[43,50,59,66]],mel:[76,79,81,83,86],pad:'sine',pv:.045,atk:.9,stag:.05,mp:.35}
+];
 function musicStep(){
   if(!S.music||!actx||actx.state!=='running')return;
-  const t=actx.currentTime+.05,beat=.86,chord=PROG[Math.floor(mStep/4)%PROG.length];
-  if(mStep%4===0){chord.forEach(n=>mNote(mf(n),t,beat*4,.035,'triangle'));mNote(mf(chord[0]-12),t,beat*3.5,.06,'sine')}
-  if(Math.random()<.55)mNote(mf(PENT[Math.random()*PENT.length|0]),t+(Math.random()<.3?beat/2:0),beat*1.6,.04,'sine');
+  const M=MOODS.find(m=>m.id===S.mood)||MOODS[0],t=actx.currentTime+.05,b=M.beat;
+  const chord=M.prog[Math.floor(mStep/4)%M.prog.length],s=mStep%4;
+  if(M.arp){
+    const n=chord[mStep%chord.length];
+    mNote(mf(n),t,b*3,.07,'sine',.01);mNote(mf(n+12),t,b*1.2,.03,'sine',.01);
+    if(s===0)mNote(mf(chord[0]-12),t,b*3,.05,'sine');
+  }else if(s===0){
+    chord.forEach((n,i)=>mNote(mf(n),t+i*M.stag,M.dec||b*4,M.pv,M.pad,M.atk));
+    mNote(mf(chord[0]-12),t,b*3.5,.06,'sine');
+  }
+  if(M.drums){mDrum(t,s%2===0?'k':'s');mDrum(t+b/2,'h')}
+  if(Math.random()<M.mp)mNote(mf(M.mel[Math.random()*M.mel.length|0]),t+(Math.random()<.3?b/2:0),b*1.6,.04,'sine');
   mStep++;
 }
-function musicOn(){musicInit();if(mTimer)return;mTimer=setInterval(musicStep,860);musicStep()}
+function musicOn(){
+  musicInit();if(mTimer)return;
+  const M=MOODS.find(m=>m.id===S.mood)||MOODS[0];
+  mTimer=setInterval(musicStep,Math.round(M.beat*1000));musicStep();
+}
 function musicOff(){clearInterval(mTimer);mTimer=null}
-const musLabel=()=>{$('musBtn').textContent=S.music?'🎵 On':'🎵 Off'};
+const sfv=()=>S.svol*2;
+$('mvol').oninput=e=>{S.mvol=+e.target.value;if(mOut)mOut.gain.value=S.mvol*1.4;save()};
+$('svol').oninput=e=>{S.svol=+e.target.value;save()};
+$('svol').onchange=()=>{try{tone('triangle',700,720,.08,.08)}catch(err){}};
+$('musToggle').onclick=()=>$('musBtn').click();
+
+// ---------- cursors ----------
+const CURS=[
+ {id:'def',n:'Default',e:'🖱️',css:''},
+ {id:'hand',n:'Pointing Hand',e:'👆',css:'pointer'},
+ {id:'cross',n:'Crosshair',e:'➕',css:'crosshair'},
+ {id:'apple',n:'Teacher Apple',e:'🍎',emoji:1},
+ {id:'star',n:'Gold Star',e:'⭐',emoji:1},
+ {id:'crayon',n:'Crayon',e:'🖍️',emoji:1},
+ {id:'wand',n:'Magic Wand',e:'🪄',emoji:1},
+ {id:'rocket',n:'Rocket',e:'🚀',emoji:1},
+ {id:'lolly',n:'Lollipop',e:'🍭',emoji:1}
+];
+function cursorCss(c){
+  if(c.emoji){
+    const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text x='2' y='26' font-size='26'>${c.e}</text></svg>`;
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}") 6 6, auto`;
+  }
+  return c.css;
+}
+function applyCursor(){
+  let st=document.getElementById('curStyle');
+  if(!st){st=document.createElement('style');st.id='curStyle';document.head.appendChild(st)}
+  const c=CURS.find(x=>x.id===S.cur)||CURS[0],css=cursorCss(c);
+  st.textContent=css?`html,body,*{cursor:${css}!important}`:'';
+}
+function renderCur(){
+  const l=$('curList');l.innerHTML='';
+  CURS.forEach(x=>{
+    const on=S.cur===x.id,el=document.createElement('div');el.className='card';
+    el.innerHTML=`<div><h3>${x.e} ${x.n}</h3><p>${on?'Equipped':'Tap to use'}</p></div><div class="cost own">${on?'✔ On':'Free'}</div>`;
+    el.onclick=()=>{S.cur=x.id;applyCursor();renderCur();save()};
+    l.appendChild(el);
+  });
+}
+
+// ---------- settings tabs, music list, achievements list ----------
+const TABS=[['bg','🎨 Backgrounds'],['kids','👦 Kids'],['cursor','🖱️ Cursors'],['music','🎵 Music'],['ach','🏆 Awards'],['theme','🌗 Theme']];
+let tab='bg';
+function renderTabs(){
+  const t=$('tabs');t.innerHTML='';
+  TABS.forEach(([id,label])=>{
+    const b=document.createElement('button');b.textContent=label;if(tab===id)b.className='sel';
+    b.onclick=()=>{tab=id;renderSet()};t.appendChild(b);
+  });
+  document.querySelectorAll('#setm .pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===tab));
+}
+function renderMood(){
+  const l=$('moodList');l.innerHTML='';
+  MOODS.forEach(x=>{
+    const on=S.mood===x.id&&S.music,el=document.createElement('div');el.className='card';
+    el.innerHTML=`<div><h3>${x.e} ${x.n}</h3><p>${on?'Now playing':'Tap to play'}</p></div><div class="cost own">${on?'▶':'Play'}</div>`;
+    el.onclick=()=>{S.mood=x.id;mStep=0;musicOff();S.music=true;musLabel();musicOn();save();renderMood()};
+    l.appendChild(el);
+  });
+}
+function renderAchList(){
+  const n=Object.keys(S.ach).length;
+  $('achSum').textContent=`🏆 ${n} / ${ACH.length} unlocked · +${n}% production`;
+  const l=$('achList');l.innerHTML='';
+  ACH.forEach(a=>{
+    const r=document.createElement('div'),got=S.ach[a.id];
+    r.className='ach'+(got?' got':'');r.textContent=(got?'✅ ':'🔒 ')+a.n+' – '+a.d;l.appendChild(r);
+  });
+}
+const musLabel=()=>{$('musBtn').textContent=S.music?'🎵 On':'🎵 Off';$('musToggle').textContent='🎵 Music: '+(S.music?'On':'Off')};
 $('musBtn').onclick=()=>{S.music=!S.music;musLabel();S.music?musicOn():musicOff();save()};
 document.addEventListener('pointerdown',()=>{if(S.music)musicOn()},{once:true});
 document.addEventListener('visibilitychange',()=>{if(actx)document.hidden?actx.suspend():actx.resume()});
@@ -396,6 +534,7 @@ const BGS=[
 ];
 function applyLook(){
   $('clickZone').dataset.bg=S.bg;
+  applyCursor();
   $('scene').innerHTML=(SCENE[S.bg]||[]).map(e=>`<i>${e}</i>`).join('');
   const ch=CHARS.find(c=>c.id===S.ch)||CHARS[0];
   $('kidBtn').textContent=ch.id==='mix'?'👦':ch.e;
@@ -410,7 +549,7 @@ function renderSet(){
     b.onclick=()=>{S.theme=t;applyLook();renderSet();save()};
     tr.appendChild(b);
   });
-  renderChars();
+  renderTabs();renderChars();renderCur();renderMood();renderAchList();
   const l=$('bgList');l.innerHTML='';
   BGS.forEach(x=>{
     const own=S.bgs[x.id],on=S.bg===x.id,can=own||S.kids>=x.c;
@@ -427,7 +566,10 @@ function renderSet(){
   });
 }
 $('setBtn').onclick=()=>{renderSet();$('setm').style.display='flex'};
-$('setClose').onclick=()=>{$('setm').style.display='none'};
+const closeSet=()=>{$('setm').style.display='none'};
+$('setClose').onclick=closeSet;$('setX').onclick=closeSet;
+$('setm').addEventListener('click',e=>{if(e.target===$('setm'))closeSet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSet()});
 setInterval(()=>{if($('setm').style.display==='flex')renderSet()},1000);
 const CHARS=[
  {id:'mix',n:'Class Mix',e:'🎲',c:0},
@@ -514,7 +656,7 @@ function load(){
   try{
     const d=JSON.parse(localStorage.getItem('kidclicker2')||'null');
     if(d){S.name=d.name||'';S.kids=d.kids||0;
-      S.dip=d.dip||0;S.total=d.total||0;S.bus=d.bus||0;S.ach=d.ach||{};S.snd=d.snd!==false;S.last=d.last||0;S.bgs=d.bgs||{meadow:1};S.bg=d.bg||'meadow';S.theme=d.theme||'auto';S.chars=d.chars||{mix:1};S.ch=d.ch||'mix';S.music=d.music!==false;
+      S.dip=d.dip||0;S.total=d.total||0;S.bus=d.bus||0;S.ach=d.ach||{};S.snd=d.snd!==false;S.last=d.last||0;S.bgs=d.bgs||{meadow:1};S.bg=d.bg||'meadow';S.theme=d.theme||'auto';S.chars=d.chars||{mix:1};S.ch=d.ch||'mix';S.music=d.music!==false;S.mood=d.mood||'chill';S.mvol=d.mvol!=null?d.mvol:.7;S.svol=d.svol!=null?d.svol:.5;S.cur=d.cur||'def';S.clicks=d.clicks||0;
       BUILD.forEach(x=>S.b[x.id]=(d.b&&d.b[x.id])||0);
       UPG.forEach(x=>S.u[x.id]=(d.u&&d.u[x.id])||0);}
   }catch(e){}
@@ -537,6 +679,7 @@ function sure(id,label){
   };
 }
 sure('devSet','Set kids');sure('devBuy','Buy everything +100');
+$('mvol').value=S.mvol;$('svol').value=S.svol;
 function toggleDev(){$('dev').classList.toggle('min');[...$('dev').children].slice(1).forEach(e=>e.style.display=e.style.display==='none'?'':'none')}
 (function(){
   const dev=$('dev'),h=dev.querySelector('b');
