@@ -168,6 +168,20 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
 .vol{display:flex;align-items:center;gap:10px;margin:8px 0;font-weight:600}
 .vol input{flex:1;accent-color:var(--hdr2)}
 #musToggle{width:100%;padding:8px;border:0;border-radius:12px;background:var(--hdr2);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.2);margin-bottom:8px}
+#dev{background:linear-gradient(160deg,#0b2a66,#123f8f);border:2px solid #5aa9ff;color:#e8f2ff;box-shadow:0 8px 0 rgba(0,20,60,.5),0 0 18px rgba(90,169,255,.5)}
+#dev b{color:#9fd0ff}
+#dev button{background:linear-gradient(#6db6ff,#2f7de1);color:#fff}
+#dev input{background:#e8f2ff}
+.bar{height:6px;border-radius:6px;background:rgba(0,0,0,.14);margin-top:4px}
+.bar i{display:block;height:100%;border-radius:6px;background:var(--ok)}
+.card.slot{flex-wrap:wrap;cursor:default}.card.slot:hover{transform:none}
+.srow{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.srow button,#pnameBtn,#autoBtn{padding:6px 12px;border:0;border-radius:10px;background:var(--hdr2);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.2)}
+#autoBtn{width:100%;padding:8px}
+.row{display:flex;gap:6px}.row input{flex:1;min-width:0;padding:8px;border-radius:10px;border:2px solid var(--cardbd);background:var(--cardbg);color:var(--ink);font-family:inherit}
+#pmsg{font-size:.85rem;margin:6px 0;min-height:1em}
+#c-sandbox h3::before{content:'🏖️ '}#c-library h3::before{content:'📚 '}#c-zoo h3::before{content:'🦒 '}#c-water h3::before{content:'🌊 '}#c-stadium h3::before{content:'🏟️ '}#c-moon h3::before{content:'🌕 '}#c-time h3::before{content:'⏳ '}#c-galaxy h3::before{content:'🌌 '}#c-multi h3::before{content:'♾️ '}#c-mega h3::before{content:'🧤 '}#c-snack h3::before{content:'🍪 '}
+#kidBtn.tap{scale:.93}
 </style>
 </head>
 <body>
@@ -197,7 +211,14 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
     <label class="vol">🔊 Effects <input type="range" id="svol" min="0" max="1" step=".05"></label>
   </div>
   <div class="pane" data-pane="ach"><div class="sec" id="achSum"></div><div id="achList"></div></div>
-  <div class="pane" data-pane="theme"><div class="sec">Theme</div><div id="themeRow"></div></div>
+  <div class="pane" data-pane="board">
+    <div class="sec">Your leaderboard name</div>
+    <div class="row"><input id="pname" maxlength="16" placeholder="e.g. Mr Jeff"><button id="pnameBtn">Save</button></div>
+    <div id="pmsg"></div>
+    <div class="sec">Top kids · refreshes every 3 min</div><div id="boardList"></div>
+  </div>
+  <div class="pane" data-pane="saves"><div class="sec">3 save slots</div><div id="slotList"></div></div>
+  <div class="pane" data-pane="theme"><div class="sec">Theme</div><div id="themeRow"></div><div class="sec">Auto clicker</div><button id="autoBtn">🤖 Auto clicker: OFF</button></div>
   <button id="setClose">Done</button>
 </div></div>
 
@@ -205,7 +226,7 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
   <b>🤫</b>
   <input id="devAmt" type="number" placeholder="Set kids to...">
   <button id="devSet">Set kids</button>
-  <button id="devBuy">Buy everything +100</button>
+  <button id="devBuy">Buy everything +100 (costs kids)</button>
   <button id="devX2">Kids ×2</button>
   <button id="devMult">2× production: OFF</button>
 </div>
@@ -220,21 +241,32 @@ h1{color:#fff;font-weight:700;text-shadow:0 4px 0 rgba(0,0,0,.18),0 0 20px rgba(
 // ---------- data ----------
 const BUILD=[
  {id:'daycare',n:'Baby Daycare',kps:.5,base:15},
+ {id:'sandbox',n:'Sandbox',kps:1.2,base:50},
  {id:'playground',n:'Playground',kps:4,base:100},
  {id:'school',n:'Elementary School',kps:32,base:1100},
+ {id:'library',n:'Story Library',kps:110,base:4500},
  {id:'camp',n:'Summer Camp',kps:200,base:12000},
+ {id:'zoo',n:'Kid Zoo',kps:800,base:55000},
  {id:'park',n:'Theme Park',kps:1400,base:130000},
+ {id:'water',n:'Water Park',kps:6000,base:6e5},
  {id:'town',n:'Kid Town',kps:8000,base:1.4e6},
+ {id:'stadium',n:'Kid Stadium',kps:30000,base:6e6},
  {id:'city',n:'Kid City',kps:47000,base:2e7},
+ {id:'moon',n:'Moon Base',kps:2e5,base:1e8},
  {id:'space',n:'Space Academy',kps:260000,base:3.3e8},
- {id:'portal',n:'Portal to Kid Dimension',kps:1.6e6,base:5.1e9}
+ {id:'portal',n:'Portal to Kid Dimension',kps:1.6e6,base:5.1e9},
+ {id:'time',n:'Time Machine School',kps:1.2e7,base:7.5e10},
+ {id:'galaxy',n:'Galaxy Campus',kps:9e7,base:1.2e12},
+ {id:'multi',n:'Kid Multiverse',kps:6e8,base:2e13}
 ];
 const UPG=[
  {id:'hands',n:'Stronger Hands',d:'+1 Kid per click',base:50,g:1.5},
  {id:'crayon',n:'Golden Crayons',d:'Clicks gain +1% of your Kids/sec',base:2000,g:2.2},
- {id:'teacher',n:'Teacher Training',d:'+10% to all Kids/sec',base:800,g:2.5}
+ {id:'teacher',n:'Teacher Training',d:'+10% to all Kids/sec',base:800,g:2.5},
+ {id:'mega',n:'Giant Gloves',d:'+25 Kids per click',base:25000,g:1.7},
+ {id:'snack',n:'Snack Time',d:'+5% to all Kids/sec',base:6000,g:3}
 ];
-const S={name:'',kids:0,b:{},u:{},dip:0,total:0,bus:0,ach:{},snd:true,last:0,bgs:{meadow:1},bg:'meadow',theme:'auto',chars:{mix:1},ch:'mix',music:true,mood:'chill',mvol:.7,svol:.5,cur:'def',clicks:0};
+const S={name:'',kids:0,b:{},u:{},dip:0,total:0,bus:0,ach:{},snd:true,last:0,bgs:{meadow:1},bg:'meadow',theme:'auto',chars:{mix:1},ch:'mix',music:true,mood:'chill',mvol:.7,svol:.5,cur:'def',clicks:0,best:0,pname:'',auto:false};
 BUILD.forEach(x=>S.b[x.id]=0);UPG.forEach(x=>S.u[x.id]=0);
 const cost=(base,g,c)=>Math.floor(base*Math.pow(g,c));
 const bCost=x=>cost(x.base,1.15,S.b[x.id]);
@@ -248,25 +280,31 @@ function fmt(n){
   if(i>=SUF.length)return n.toExponential(2).replace('e+','e');
   return (n/Math.pow(1000,i)).toFixed(2).replace(/\.?0+$/,'')+SUF[i];
 }
-const ACH=[1e2,1e4,1e6,1e8,1e10,1e12].map(v=>({id:'t'+v,n:fmt(v)+' Club',d:'Earn '+fmt(v)+' kids in one run',ok:()=>S.total>=v}))
- .concat(BUILD.map(x=>({id:'b'+x.id,n:x.n+' Pro',d:'Own 10 '+x.n,ok:()=>S.b[x.id]>=10})))
- .concat([
- {id:'grad',n:'Graduate!',d:'Graduate for the first time',ok:()=>S.dip>=1},
- {id:'bus',n:'All Aboard',d:'Catch a Field Trip bus',ok:()=>S.bus>=1},
- {id:'c100',n:'Warming Up',d:'Click 100 times',ok:()=>S.clicks>=100},
- {id:'c1k',n:'Finger Workout',d:'Click 1,000 times',ok:()=>S.clicks>=1000},
- {id:'c10k',n:'Clicking Champion',d:'Click 10,000 times',ok:()=>S.clicks>=10000},
- {id:'hands10',n:'Strong Grip',d:'Buy 10 Stronger Hands',ok:()=>S.u.hands>=10},
- {id:'allb',n:'Full Campus',d:'Own at least 1 of every building',ok:()=>BUILD.every(x=>S.b[x.id]>=1)},
- {id:'chars3',n:'Dress-Up Day',d:'Own 3 characters',ok:()=>Object.keys(S.chars).length>=3},
- {id:'bgs3',n:'Scenery Fan',d:'Own 3 backgrounds',ok:()=>Object.keys(S.bgs).length>=3},
- {id:'kps1k',n:'Busy Bees',d:'Reach 1K kids per second',ok:()=>kpsNow()>=1000},
- {id:'kps1m',n:'Kid Factory',d:'Reach 1M kids per second',ok:()=>kpsNow()>=1e6},
- {id:'dip10',n:'Honor Roll',d:'Earn 10 diplomas',ok:()=>S.dip>=10}
-]);
+const A=(id,n,d,val,goal)=>({id,n,d,val,goal,ok:()=>val()>=goal});
+const ACH=[
+ ...[1e2,1e4,1e6,1e8,1e10,1e12,1e15].map(v=>A('t'+v,fmt(v)+' Club','Earn '+fmt(v)+' kids in one run',()=>S.total,v)),
+ ...BUILD.map(x=>A('b'+x.id,x.n+' Pro','Own 10 '+x.n,()=>S.b[x.id],10)),
+ ...[[1e2,'Warming Up'],[1e3,'Finger Workout'],[1e4,'Clicking Champion'],[1e5,'Click Machine'],[1e6,'Click Legend'],[1e7,'Click God']].map(([v,n])=>A('c'+v,n,'Click '+fmt(v)+' times',()=>S.clicks,v)),
+ A('grad','Graduate!','Graduate once',()=>S.dip,1),
+ A('dip10','Honor Roll','Earn 10 diplomas',()=>S.dip,10),
+ A('bus','All Aboard','Catch a Field Trip bus',()=>S.bus,1),
+ A('bus10','Bus Fan','Catch 10 buses',()=>S.bus,10),
+ A('hands10','Strong Grip','Buy 10 Stronger Hands',()=>S.u.hands,10),
+ A('allb','Full Campus','Own 1 of every building',()=>BUILD.filter(x=>S.b[x.id]>=1).length,BUILD.length),
+ A('chars3','Dress-Up Day','Own 3 characters',()=>Object.keys(S.chars).length,3),
+ A('chars8','Costume Party','Own every character',()=>Object.keys(S.chars).length,8),
+ A('bgs3','Scenery Fan','Own 3 backgrounds',()=>Object.keys(S.bgs).length,3),
+ A('bgs6','Interior Designer','Own every background',()=>Object.keys(S.bgs).length,6),
+ A('kps1k','Busy Bees','Reach 1K kids per second',()=>kpsNow(),1e3),
+ A('kps1m','Kid Factory','Reach 1M kids per second',()=>kpsNow(),1e6),
+ A('kps1b','Kid Empire','Reach 1B kids per second',()=>kpsNow(),1e9)
+];
 let devMult=1;
-const kpsNow=()=>BUILD.reduce((a,x)=>a+S.b[x.id]*x.kps,0)*(1+.1*S.u.teacher)*(1+.02*S.dip)*(1+.01*Object.keys(S.ach).length)*devMult;
-const clickPow=()=>(1+S.u.hands)*devMult+S.u.crayon*.01*kpsNow();
+const chMult=()=>CHARS.reduce((a,c)=>a*(S.chars[c.id]?c.m:1),1);
+const gm=()=>(1+.1*S.u.teacher)*(1+.05*S.u.snack)*(1+.02*S.dip)*(1+.01*Object.keys(S.ach).length)*devMult*chMult();
+const fd=n=>n<1000?String(+n.toFixed(1)):fmt(n);
+const kpsNow=()=>BUILD.reduce((a,x)=>a+S.b[x.id]*x.kps,0)*gm();
+const clickPow=()=>(1+S.u.hands+S.u.mega*25)*devMult*chMult()+S.u.crayon*.01*kpsNow();
 
 // ---------- shop ----------
 const $=id=>document.getElementById(id);
@@ -290,8 +328,10 @@ function buy(t,x){
 function render(){
   const k=Math.floor(S.kids);
   $('kids').textContent=k===1?'1 Kid':fmt(k)+' Kids';
-  $('kps').textContent=`per second: ${kpsNow()>=1000?fmt(kpsNow()):kpsNow().toFixed(1)}  ·  per click: ${clickPow()>=1000?fmt(clickPow()):clickPow().toFixed(1)}`;
+  $('kps').textContent=`per second: ${kpsNow()>=1000?fmt(kpsNow()):kpsNow().toFixed(1)}  ·  per click: ${clickPow()>=1000?fmt(clickPow()):clickPow().toFixed(1)}${S.auto?'  ·  🤖 auto +'+fd(clickPow()*33)+'/sec':''}`;
   document.title=fmt(k)+' Kids – '+S.name;
+  const gmv=gm();
+  BUILD.forEach(x=>{const e=$('c-'+x.id);if(e){const one=x.kps*gmv;e.querySelector('p').textContent=`+${fd(one)}/sec each · making ${fd(one*S.b[x.id])}/sec`}});
   ACH.forEach(a=>{
     if(!S.ach[a.id]&&a.ok()){S.ach[a.id]=1;toast('🏆 '+a.n+' unlocked!');beep(1000,.15);confetti(14)}
     const r=$('a-'+a.id);
@@ -320,7 +360,7 @@ setInterval(()=>{const k=kpsNow();if(k>0){S.kids+=k/10;S.total+=k/10;render()}},
 // ---------- field trip bus ----------
 function scheduleBus(){setTimeout(spawnBus,45000+Math.random()*45000)}
 function spawnBus(){
-  const z=$('clickZone'),b=document.createElement('div');b.id='bus';b.textContent='🚌';
+  const z=$('clickZone'),b=document.createElement('div');b.id='bus';b.textContent=BUS[S.bg]||'🚌';
   b.style.left=(10+Math.random()*70)+'%';b.style.top=(10+Math.random()*70)+'%';
   const gone=setTimeout(()=>{b.remove();scheduleBus()},10000);
   b.onclick=()=>{
@@ -490,7 +530,7 @@ function renderCur(){
 }
 
 // ---------- settings tabs, music list, achievements list ----------
-const TABS=[['bg','🎨 Backgrounds'],['kids','👦 Kids'],['cursor','🖱️ Cursors'],['music','🎵 Music'],['ach','🏆 Awards'],['theme','🌗 Theme']];
+const TABS=[['bg','🎨 Backgrounds'],['kids','👦 Kids'],['cursor','🖱️ Cursors'],['music','🎵 Music'],['ach','🏆 Awards'],['board','🏅 Board'],['saves','💾 Saves'],['theme','🌗 Extras']];
 let tab='bg';
 function renderTabs(){
   const t=$('tabs');t.innerHTML='';
@@ -514,10 +554,127 @@ function renderAchList(){
   $('achSum').textContent=`🏆 ${n} / ${ACH.length} unlocked · +${n}% production`;
   const l=$('achList');l.innerHTML='';
   ACH.forEach(a=>{
-    const r=document.createElement('div'),got=S.ach[a.id];
-    r.className='ach'+(got?' got':'');r.textContent=(got?'✅ ':'🔒 ')+a.n+' – '+a.d;l.appendChild(r);
+    const got=S.ach[a.id],pct=got?100:Math.min(99,Math.floor(a.val()/a.goal*100)),r=document.createElement('div');
+    r.className='ach'+(got?' got':'');
+    r.textContent=(got?'✅ ':'🔒 ')+a.n+' – '+a.d+(got?'':' ('+pct+'%)');
+    if(!got){const b=document.createElement('div'),f=document.createElement('i');b.className='bar';f.style.width=pct+'%';b.appendChild(f);r.appendChild(b)}
+    l.appendChild(r);
   });
 }
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- name filter ----------
+const BAD=['fuck','shit','bitch','cunt','dick','cock','pussy','nigg','slut','whore','bastard','nazi','hitler','penis','vagina','porn','boob','wank','twat','retard','piss','molest'];
+const BADW=['ass','sex','tit','tits','cum','fag','kkk','rape','anal'];
+function profane(t){
+  const l=t.toLowerCase().replace(/[@4]/g,'a').replace(/3/g,'e').replace(/[1!|]/g,'i').replace(/0/g,'o').replace(/[$5]/g,'s');
+  return BAD.some(w=>l.replace(/[^a-z]/g,'').includes(w))||l.split(/[^a-z]+/).some(w=>BADW.includes(w));
+}
+function badName(n){
+  if(n.length<3||n.length>16)return 'Use 3–16 characters.';
+  if(!/^[A-Za-z0-9][A-Za-z0-9 .'-]*$/.test(n))return 'Letters, numbers and spaces only.';
+  if(profane(n))return 'Please pick a friendlier name.';
+  return '';
+}
+
+// ---------- leaderboard (online page only) ----------
+let DB=null,myId=null,BOARD=[];
+const nkey=n=>n.toLowerCase().replace(/[^a-z0-9]/g,'');
+async function pushScore(){
+  if(!DB||!myId||!S.pname)return;
+  S.best=Math.max(S.best||0,S.total);
+  await DB.collection('lb').doc(myId).set({name:S.pname,key:nkey(S.pname),kids:S.best,t:Date.now()});
+}
+async function claimName(raw){
+  const name=raw.trim().replace(/\s+/g,' '),e=badName(name);
+  if(e)return e;
+  if(!DB||!myId)return 'The leaderboard only works on the online page.';
+  try{
+    const q=await DB.collection('lb').where('key','==',nkey(name)).get();
+    if(q.docs.some(d=>d.id!==myId))return 'That name is already taken.';
+    S.pname=name;await pushScore();save();return '';
+  }catch(err){return 'Could not reach the leaderboard (you may need contributor access).'}
+}
+async function boardRefresh(){
+  if(DB){try{await pushScore();const q=await DB.collection('lb').orderBy('kids','desc').limit(10).get();BOARD=q.docs.map(d=>({id:d.id,...d.data()}))}catch(e){}}
+  renderBoard();
+}
+function renderBoard(){
+  const l=$('boardList');l.innerHTML='';
+  if(!DB){l.textContent='The leaderboard works on the online page for signed-in viewers with contributor access.';return}
+  if(!BOARD.length){l.textContent='No scores yet. Pick a name and keep clicking!';return}
+  BOARD.forEach((r,i)=>{
+    const el=document.createElement('div'),d=document.createElement('div'),h=document.createElement('h3'),c=document.createElement('div');
+    el.className='card';h.textContent=(['🥇','🥈','🥉'][i]||'#'+(i+1))+' '+r.name+(r.id===myId?' (you)':'');
+    c.className='cost own';c.textContent=fmt(r.kids);d.appendChild(h);el.append(d,c);l.appendChild(el);
+  });
+}
+$('pnameBtn').onclick=async()=>{const m=await claimName($('pname').value);$('pmsg').textContent=m||'✅ Name saved! You are on the board.';if(!m)boardRefresh()};
+setInterval(boardRefresh,180000);
+(async()=>{
+  try{
+    if(!window.claude)return;
+    DB=await window.claude.use('db');
+    const u=await window.claude.use('user');
+    myId=u?await u.id():null;if(!myId)DB=null;
+  }catch(e){DB=null}
+  boardRefresh();
+})();
+
+// ---------- 3 save slots ----------
+const slotKey=n=>'kc_slot'+n;
+let slot=1,armed='';
+function freshState(){
+  Object.assign(S,{name:'',kids:0,dip:0,total:0,bus:0,ach:{},last:0,bgs:{meadow:1},bg:'meadow',chars:{mix:1},ch:'mix',clicks:0,best:0,pname:'',auto:false});
+  BUILD.forEach(x=>S.b[x.id]=0);UPG.forEach(x=>S.u[x.id]=0);
+}
+function switchSlot(n){
+  save();slot=n;try{localStorage.setItem('kc_active',n)}catch(e){}
+  freshState();load();applyLook();applyName();autoLabel();$('pname').value=S.pname||'';
+  if(!S.name)askName();
+}
+function delSlot(n){
+  try{localStorage.removeItem(slotKey(n))}catch(e){}
+  if(n===slot){freshState();applyLook();applyName();autoLabel();askName()}
+}
+function renderSlots(){
+  const l=$('slotList');l.innerHTML='';
+  for(let n=1;n<=3;n++){
+    let d=null;try{d=JSON.parse(localStorage.getItem(slotKey(n))||'null')}catch(e){}
+    const cur=n===slot,info=cur?S:d,el=document.createElement('div'),row=document.createElement('div');
+    el.className='card slot';row.className='srow';
+    el.innerHTML=`<div><h3>💾 Save ${n}${cur?' · active':''}</h3><p>${info?esc(info.name||'Unnamed')+' · '+fmt(info.kids||0)+' kids':'Empty'}</p></div>`;
+    const add=(label,fn,confirm)=>{
+      const key=n+label,b=document.createElement('button');
+      b.textContent=armed===key?'Sure?':label;
+      b.onclick=e=>{e.stopPropagation();
+        if(confirm&&armed!==key){armed=key;setTimeout(()=>{if(armed===key){armed='';renderSlots()}},3000);return renderSlots()}
+        armed='';fn();renderSlots()};
+      row.appendChild(b);
+    };
+    if(cur)add('Save now',()=>{save();toast('💾 Saved')});
+    else{add(d?'Switch':'Start new',()=>switchSlot(n));add('Overwrite',()=>{try{localStorage.setItem(slotKey(n),JSON.stringify(S));toast('Copied to save '+n)}catch(e){}},true)}
+    if(info)add('Delete',()=>delSlot(n),true);
+    el.appendChild(row);l.appendChild(el);
+  }
+}
+
+// ---------- auto clicker ----------
+const autoLabel=()=>{$('autoBtn').textContent='🤖 Auto clicker: '+(S.auto?'ON':'OFF')};
+$('autoBtn').onclick=()=>{S.auto=!S.auto;autoLabel();save()};
+let autoN=0;
+function autoFloat(p){
+  const z=$('clickZone'),r=z.getBoundingClientRect(),k=$('kidBtn').getBoundingClientRect(),t=document.createElement('div');
+  t.className='float';t.textContent='+'+fmt(Math.max(p,1));
+  t.style.left=(k.left-r.left+k.width/2+Math.random()*80-40)+'px';t.style.top=(k.top-r.top+k.height/3)+'px';
+  z.appendChild(t);setTimeout(()=>t.remove(),800);
+}
+setInterval(()=>{
+  if(!S.auto)return;
+  const p=clickPow();S.kids+=p;S.total+=p;S.clicks++;
+  $('kidBtn').classList.toggle('tap');
+  if(++autoN%4===0){render();autoFloat(p)}
+},30);
 const musLabel=()=>{$('musBtn').textContent=S.music?'🎵 On':'🎵 Off';$('musToggle').textContent='🎵 Music: '+(S.music?'On':'Off')};
 $('musBtn').onclick=()=>{S.music=!S.music;musLabel();S.music?musicOn():musicOff();save()};
 document.addEventListener('pointerdown',()=>{if(S.music)musicOn()},{once:true});
@@ -549,7 +706,7 @@ function renderSet(){
     b.onclick=()=>{S.theme=t;applyLook();renderSet();save()};
     tr.appendChild(b);
   });
-  renderTabs();renderChars();renderCur();renderMood();renderAchList();
+  renderTabs();renderChars();renderCur();renderMood();renderAchList();renderBoard();renderSlots();
   const l=$('bgList');l.innerHTML='';
   BGS.forEach(x=>{
     const own=S.bgs[x.id],on=S.bg===x.id,can=own||S.kids>=x.c;
@@ -572,15 +729,16 @@ $('setm').addEventListener('click',e=>{if(e.target===$('setm'))closeSet()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSet()});
 setInterval(()=>{if($('setm').style.display==='flex')renderSet()},1000);
 const CHARS=[
- {id:'mix',n:'Class Mix',e:'🎲',c:0},
- {id:'hero',n:'Superhero Kid',e:'🦸',c:2e4},
- {id:'wizard',n:'Wizard Kid',e:'🧙',c:2e5},
- {id:'ninja',n:'Ninja Kid',e:'🥷',c:3e6},
- {id:'astro',n:'Astronaut Kid',e:'🧑‍🚀',c:8e7},
- {id:'mermaid',n:'Mermaid Kid',e:'🧜',c:2e9},
- {id:'unicorn',n:'Unicorn',e:'🦄',c:4e10},
- {id:'dragon',n:'Dragon',e:'🐲',c:1e12}
+ {id:'mix',n:'Class Mix',e:'🎲',c:0,m:1},
+ {id:'hero',n:'Superhero Kid',e:'🦸',c:2e4,m:1.1},
+ {id:'wizard',n:'Wizard Kid',e:'🧙',c:2e5,m:1.15},
+ {id:'ninja',n:'Ninja Kid',e:'🥷',c:3e6,m:1.2},
+ {id:'astro',n:'Astronaut Kid',e:'🧑‍🚀',c:8e7,m:1.3},
+ {id:'mermaid',n:'Mermaid Kid',e:'🧜',c:2e9,m:1.4},
+ {id:'unicorn',n:'Unicorn',e:'🦄',c:4e10,m:1.6},
+ {id:'dragon',n:'Dragon',e:'🐲',c:1e12,m:2}
 ];
+const BUS={meadow:'🚌',beach:'⛵',candy:'🎠',space:'🛸',ocean:'🐋',rainbow:'🦄'};
 const SCENE={
  meadow:['🌳','🌷','🏡','🌻','🌲','🌼','🌳'],
  beach:['🌴','🐚','⛱️','🏖️','🦀','🌴'],
@@ -594,7 +752,7 @@ function renderChars(){
   CHARS.forEach(x=>{
     const own=S.chars[x.id],on=S.ch===x.id,can=own||S.kids>=x.c;
     const el=document.createElement('div');el.className='card'+(can?'':' off');
-    el.innerHTML=`<div><h3>${x.e} ${x.n}</h3><p>${on?'Equipped':own?'Tap to equip':'Tap to buy'}</p></div><div class="cost${own?' own':''}">${own?(on?'✔ On':'Equip'):fmt(x.c)}</div>`;
+    el.innerHTML=`<div><h3>${x.e} ${x.n}</h3><p>${x.m>1?'×'+x.m+' production · ':''}${on?'Equipped':own?'Tap to equip':'Tap to buy'}</p></div><div class="cost${own?' own':''}">${own?(on?'✔ On':'Equip'):fmt(x.c)}</div>`;
     el.onclick=()=>{
       if(!own){if(S.kids<x.c)return;S.kids-=x.c;S.chars[x.id]=1;beep(800,.1);toast('🎉 Unlocked '+x.n+'!');confetti(18)}
       S.ch=x.id;applyLook();renderSet();render();save();
@@ -616,12 +774,13 @@ function confetti(n){
 // ---------- name / dev panel ----------
 function applyName(){
   $('nameTxt').textContent='🏫 '+S.name+' Kindergarten';
-  $('dev').style.display=S.name.trim().toLowerCase()==='kingducky'?'block':'none';
+  $('dev').style.display=['kingducky','kingslime'].includes(S.name.trim().toLowerCase())?'block':'none';
   render();save();
 }
 function askName(){$('nameIn').value=S.name;$('modal').style.display='flex';$('nameIn').focus()}
 $('nameOk').onclick=()=>{
   const v=$('nameIn').value.trim();
+  if(profane(v)){toast('Please pick a friendlier kindergarten name 🙂');return}
   S.name=v||'Sunshine';$('modal').style.display='none';applyName();
 };
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('nameOk').click()});
@@ -638,25 +797,20 @@ $('devMult').onclick=()=>{
   render();
 };
 $('devBuy').onclick=()=>{
-  BUILD.forEach(x=>S.b[x.id]+=100);UPG.forEach(x=>S.u[x.id]+=100);render();
+  const bulk=(base,g,c)=>Math.floor(base*Math.pow(g,c)*(Math.pow(g,100)-1)/(g-1));
+  const tot=BUILD.reduce((a,x)=>a+bulk(x.base,1.15,S.b[x.id]),0)+UPG.reduce((a,x)=>a+bulk(x.base,x.g,S.u[x.id]),0);
+  if(S.kids<tot){toast('Need '+fmt(tot)+' kids to buy +100 of everything');return}
+  S.kids-=tot;BUILD.forEach(x=>S.b[x.id]+=100);UPG.forEach(x=>S.u[x.id]+=100);toast('Bought +100 of everything');render();
 };
 
-function sure(id,label){
-  const b=$(id),fn=b.onclick;let armed=0,t;
-  b.onclick=()=>{
-    if(!armed){armed=1;b.textContent='⚠️ Sure? Tap again';clearTimeout(t);t=setTimeout(()=>{armed=0;b.textContent=label},3000);return}
-    armed=0;clearTimeout(t);b.textContent=label;fn();
-  };
-}
-sure('devSet','Set kids');sure('devBuy','Buy everything +100');
 
 // ---------- save ----------
-function save(){try{S.last=Date.now();localStorage.setItem('kidclicker2',JSON.stringify(S))}catch(e){}}
+function save(){try{S.last=Date.now();localStorage.setItem(slotKey(slot),JSON.stringify(S))}catch(e){}}
 function load(){
   try{
-    const d=JSON.parse(localStorage.getItem('kidclicker2')||'null');
+    const d=JSON.parse(localStorage.getItem(slotKey(slot))||'null');
     if(d){S.name=d.name||'';S.kids=d.kids||0;
-      S.dip=d.dip||0;S.total=d.total||0;S.bus=d.bus||0;S.ach=d.ach||{};S.snd=d.snd!==false;S.last=d.last||0;S.bgs=d.bgs||{meadow:1};S.bg=d.bg||'meadow';S.theme=d.theme||'auto';S.chars=d.chars||{mix:1};S.ch=d.ch||'mix';S.music=d.music!==false;S.mood=d.mood||'chill';S.mvol=d.mvol!=null?d.mvol:.7;S.svol=d.svol!=null?d.svol:.5;S.cur=d.cur||'def';S.clicks=d.clicks||0;
+      S.dip=d.dip||0;S.total=d.total||0;S.bus=d.bus||0;S.ach=d.ach||{};S.snd=d.snd!==false;S.last=d.last||0;S.bgs=d.bgs||{meadow:1};S.bg=d.bg||'meadow';S.theme=d.theme||'auto';S.chars=d.chars||{mix:1};S.ch=d.ch||'mix';S.music=d.music!==false;S.mood=d.mood||'chill';S.mvol=d.mvol!=null?d.mvol:.7;S.svol=d.svol!=null?d.svol:.5;S.cur=d.cur||'def';S.clicks=d.clicks||0;S.best=d.best||0;S.pname=d.pname||'';S.auto=!!d.auto;
       BUILD.forEach(x=>S.b[x.id]=(d.b&&d.b[x.id])||0);
       UPG.forEach(x=>S.u[x.id]=(d.u&&d.u[x.id])||0);}
   }catch(e){}
@@ -667,19 +821,12 @@ window.addEventListener('pagehide',save);
 window.addEventListener('beforeunload',save);
 
 // ---------- start ----------
+try{if(!localStorage.getItem('kc_slot1')&&localStorage.getItem('kidclicker2'))localStorage.setItem('kc_slot1',localStorage.getItem('kidclicker2'));slot=+localStorage.getItem('kc_active')||1}catch(e){}
 load();buildShop();render();scheduleBus();
 $('sndBtn').textContent=S.snd?'🔊':'🔇';
 applyLook();
 musLabel();
-function sure(id,label){
-  const b=$(id),f=b.onclick;let armed=0,t;
-  b.onclick=e=>{
-    if(!armed){armed=1;b.textContent='⚠️ Sure? Tap again';clearTimeout(t);t=setTimeout(()=>{armed=0;b.textContent=label},3000);return}
-    armed=0;clearTimeout(t);b.textContent=label;f(e);toast('✅ Done');
-  };
-}
-sure('devSet','Set kids');sure('devBuy','Buy everything +100');
-$('mvol').value=S.mvol;$('svol').value=S.svol;
+$('mvol').value=S.mvol;$('svol').value=S.svol;autoLabel();$('pname').value=S.pname||'';
 function toggleDev(){$('dev').classList.toggle('min');[...$('dev').children].slice(1).forEach(e=>e.style.display=e.style.display==='none'?'':'none')}
 (function(){
   const dev=$('dev'),h=dev.querySelector('b');
