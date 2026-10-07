@@ -118,6 +118,13 @@ background:linear-gradient(90deg,color-mix(in srgb,var(--ok),transparent 78%) va
 #news{position:absolute;top:8px;left:50%;transform:translateX(-50%);max-width:90%;text-align:center;font-size:.8rem;font-weight:600;color:#fff;background:rgba(0,0,0,.25);padding:3px 14px;border-radius:999px;opacity:0;animation:newsf 12s ease-in-out;pointer-events:none}
 @keyframes newsf{0%{opacity:0}8%,88%{opacity:1}100%{opacity:0}}
 @media (max-width:700px),(max-height:640px){#news{display:none}}
+#kid{position:relative}
+#kid::after{content:attr(data-hat);position:absolute;top:-6%;left:50%;transform:translateX(-50%) rotate(-10deg);font-size:.38em;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25))}
+#kid:focus-visible{outline:4px solid #fff;outline-offset:6px}
+.stats{max-width:92%;line-height:1.4}
+#news{left:12px;transform:none;max-width:36%}
+.card.lk{filter:grayscale(1);opacity:.55;cursor:not-allowed}.card.lk h3,.card.lk p{filter:blur(5px)}.card.lk:hover{transform:none}
+@media (max-width:700px){#tabs button{flex:1 1 30%}.tools button{padding:6px 9px}}
 #dev b{display:block;text-align:center;font-size:1.3rem;line-height:1;color:#9fd0ff;cursor:grab;touch-action:none;user-select:none}
 #dev b:active{cursor:grabbing}#dev.min{width:auto!important;padding:6px 12px}
 @media (max-width:700px){body{flex-direction:column}#shop{width:auto;margin:0 8px 8px;height:50%;flex:none}h1{padding:2px 18px}.kps{margin:6px 8px 12px;font-size:.8rem}.name{margin-bottom:6px}.tools button{padding:6px 10px;font-size:.85rem}.card{padding:8px}#dev{width:150px;font-size:.75rem}}
@@ -175,11 +182,18 @@ const UPG=[
 ];
 // character bonuses are halved vs. the old version (total about x3.4 instead of x8.8)
 const CHARS=[['mix','Class Mix','🎲',0,1],['hero','Superhero Kid','🦸',2e4,1.1],['bunny','Bunny Kid','🐰',6e4,1.15],['wizard','Wizard Kid','🧙',2e5,1.2],['fairy','Fairy Kid','🧚',1e6,1.3],['ninja','Ninja Kid','🥷',3e6,1.4],['astro','Astronaut Kid','🧑‍🚀',8e7,1.5],['robot','Robot Kid','🤖',5e8,1.6],['mermaid','Mermaid Kid','🧜',2e9,1.7],['lion','Lion Cub','🦁',1e10,1.8],['unicorn','Unicorn','🦄',4e10,2],['alien','Alien Kid','👽',1e11,2.3],['dragon','Dragon','🐲',1e12,2.7],['genie','Genie','🧞',1e13,3.2]].map(([id,n,e,c,m])=>({id,n,e,c,m:1+(m-1)*.2})).sort((a,b)=>a.c-b.c);
+const PERKS=[
+ {id:'head',n:'Head Start',e:'🚀',d:'Start each run with 500 kids per level',max:20},
+ {id:'quick',n:'Quick Learners',e:'🧠',d:'+8% all Kids/sec per level',max:15},
+ {id:'scholar',n:'Scholarship Fund',e:'🏫',d:'Buildings cost 1% less per level',max:10},
+ {id:'alumni',n:'Alumni Donations',e:'💌',d:'+10% bus and candy rewards per level',max:10},
+ {id:'touch',n:'Golden Touch',e:'✨',d:'+1% crit chance per level',max:20}
+];
 const BGS=[['meadow','Sunny Meadow','🌼',0],['beach','Sandy Beach','🏖️',5000],['candy','Candy Land','🍭',75000],['space','Outer Space','🚀',2.5e6],['ocean','Under the Sea','🐠',6e7],['rainbow','Rainbow Dreamland','🦄',1.5e9],['farm','Happy Farm','🐄',2e4],['snow','Snowy Mountain','⛄',5e5],['jungle','Jungle Trek','🦜',1.5e7],['castle','Fairy Kingdom','🏰',4e8],['night','Night City','🌃',1e10]].map(([id,n,e,c])=>({id,n,e,c})).sort((a,b)=>a.c-b.c);
 const BUS={meadow:'🚌',beach:'⛵',candy:'🎠',space:'🛸',ocean:'🐋',rainbow:'🦄',farm:'🚜',snow:'🛷',jungle:'🛶',castle:'👑',night:'🚕'};
 const SCENE={meadow:['🌳','🌷','🏡','🌻','🌲','🌼','🌳'],beach:['🌴','🐚','⛱️','🦀','🌴'],candy:['🍭','🧁','🍩','🍬','🍦','🧁'],space:['🪐','🌑','🛰️','🌠','☄️'],ocean:['🪸','🐚','🦀','🌿','🐢','🌿'],rainbow:['🌸','🦋','☁️','🌸','🌈','🦋'],farm:['🐄','🌾','🏠','🐑','🌽','🐓','🚜'],snow:['⛄','🌲','🏔️','🎿','🌲','🦌'],jungle:['🌴','🦜','🐒','🌿','🦋','🌺','🐍'],castle:['🏰','🌷','🧚','🌹','🦄','🏰'],night:['🏢','🌃','🏬','🏙️','🚦','🏢']};
 
-const S={name:'',kids:0,total:0,dip:0,bus:0,clicks:0,ach:{},b:{},u:{},bgs:{meadow:1},bg:'meadow',chars:{mix:1},ch:'mix',theme:'auto',snd:true,auto:false,last:0,music:true,mood:'chill',mvol:.7,svol:.5,cur:'def',pname:'',best:0,candy:0};
+const S={name:'',kids:0,total:0,dip:0,bus:0,clicks:0,ach:{},b:{},u:{},bgs:{meadow:1},bg:'meadow',chars:{mix:1},ch:'mix',theme:'auto',snd:true,auto:false,last:0,music:true,mood:'chill',mvol:.7,svol:.5,cur:'def',pname:'',best:0,candy:0,perks:{},dspent:0,peak:0};
 const slotKey=n=>'kc_slot'+n;let slot=1,armed='';
 function fresh(){Object.assign(S,{kids:0,total:0,b:{},u:{}});BUILD.forEach(x=>S.b[x.id]=0);UPG.forEach(x=>S.u[x.id]=0)}
 fresh();let devMult=1,rushT=0,frenzyT=0;
@@ -195,10 +209,11 @@ function fmt(n){
   return v+SUF[i];
 }
 const fd=n=>n<1000?String(+n.toFixed(1)):fmt(n);
-const bCost=x=>Math.floor(x.base*Math.pow(1.15,S.b[x.id])*(1-Math.min(.4,.01*S.u.discount)));
+const discM=()=>(1-Math.min(.4,.01*S.u.discount))*(1-.01*(S.perks.scholar||0));
+const bCost=x=>Math.floor(x.base*Math.pow(1.15,S.b[x.id])*discM());
 const uCost=x=>Math.floor(x.base*Math.pow(x.g,S.u[x.id]));
 const chMult=()=>CHARS.reduce((a,c)=>a*(S.chars[c.id]?c.m:1),1);
-const gm=()=>(1+.1*S.u.teacher)*(1+.05*S.u.snack)*(1+(.02+.005*Math.min(20,S.u.cap))*S.dip)*(1+.08*S.u.story)*(1+.06*S.u.recess)*(1+.12*S.u.pizza)*(1+.02*S.u.spirit)*(1+.003*Object.keys(S.ach).length)*devMult*chMult()*(Date.now()<rushT?7:1);
+const gm=()=>(1+.1*S.u.teacher)*(1+.05*S.u.snack)*(1+(.02+.005*Math.min(20,S.u.cap))*S.dip)*(1+.08*S.u.story)*(1+.06*S.u.recess)*(1+.12*S.u.pizza)*(1+.02*S.u.spirit)*(1+.003*Object.keys(S.ach).length)*devMult*chMult()*(1+.08*(S.perks.quick||0))*(Date.now()<rushT?7:1);
 const kpsNow=()=>BUILD.reduce((a,x)=>a+S.b[x.id]*x.kps,0)*gm();
 const clickPow=()=>(Date.now()<frenzyT?10:1)*(1+S.u.hands+S.u.sticker*3+S.u.mega*25+S.u.sprinkle*100+S.u.goldstar*10+S.u.cape*500)*devMult*chMult()+S.u.crayon*.01*kpsNow();
 const autoPow=()=>clickPow()*.5*(1+.2*Math.min(10,S.u.coach)); // auto-clicker: 10 half-power clicks/sec (was 33 full-power)
@@ -245,7 +260,7 @@ function buildShop(){
 }
 let qty=1;
 function quote(t,x){
-  const g=t==='b'?1.15:x.g,c0=S[t][x.id],disc=t==='b'?1-Math.min(.4,.01*S.u.discount):1,first=x.base*Math.pow(g,c0)*disc;
+  const g=t==='b'?1.15:x.g,c0=S[t][x.id],disc=t==='b'?discM():1,first=x.base*Math.pow(g,c0)*disc;
   const lim=x.max?x.max-c0:Infinity;if(lim<=0)return{k:0,cost:0,full:1};
   let k=qty==='max'?Math.floor(Math.log(1+S.kids*(g-1)/first)/Math.log(g)):qty;
   k=Math.max(1,Math.min(k,lim,10000));
@@ -257,12 +272,12 @@ function buildQty(){
 }
 function buy(t,x){
   const q=quote(t,x);
-  if(q.full||S.kids<q.cost)return;
+  if(q.full||S.kids<q.cost||$('c-'+x.id).classList.contains('lk'))return;
   S.kids-=q.cost;S[t][x.id]+=q.k;beep(700,.08);render();save();
 }
 let gradArm=0;
 function render(){
-  const k=Math.floor(S.kids),kp=kpsNow(),cp=clickPow();
+  const k=Math.floor(S.kids),kp=kpsNow(),cp=clickPow();S.peak=Math.max(S.peak||0,S.total);
   $('kids').textContent=k===1?'1 Kid':fmt(k)+' Kids';
   $('kps').textContent=`per second: ${fd(kp)}  ·  per click: ${fd(cp)}${S.auto?'  ·  🤖 auto +'+fd(autoPow()*10)+'/sec':''}`;
   document.title=fmt(k)+' Kids – '+S.name;
@@ -278,24 +293,27 @@ function render(){
   $('secB').textContent='Buildings · '+BUILD.reduce((a,x)=>a+S.b[x.id],0)+' owned';
   $('secU').textContent='Upgrades · '+UPG.reduce((a,x)=>a+S.u[x.id],0)+' bought';
   drawCampus();
+  $('kid').dataset.hat=S.dip>=25?'👑':S.dip>=10?'🎩':S.dip>=1?'🎓':'';
   const g=gm();
   BUILD.forEach(x=>{const mk=x.kps*g*S.b[x.id],sh=kp>0&&S.b[x.id]?' · '+Math.round(mk/kp*100)+'% of total':'';$('c-'+x.id).querySelector('p').textContent=`+${fd(x.kps*g)}/sec each · making ${fd(mk)}/sec${sh}`});
   const nw=[];ACH.forEach(a=>{if(!S.ach[a.id]&&a.val()>=a.goal){S.ach[a.id]=1;nw.push(a)}});
   if(nw.length){toast('🏆 '+nw[0].n+(nw.length>1?' +'+(nw.length-1)+' more':'')+' unlocked!');beep(1000,.15);confetti(Math.min(30,14*nw.length))}
   const p=pending();$('grad').disabled=p<1;
-  if(!gradArm)$('grad').textContent=`🎓 Graduate (+${p} 🏅, have ${S.dip})`;
+  if(!gradArm)$('grad').textContent=innerWidth<=700?`🎓 +${p} 🏅`:`🎓 Graduate (+${p} 🏅, have ${S.dip})`;
   [['b',BUILD,bCost],['u',UPG,uCost]].forEach(([t,list,f])=>list.forEach(x=>{
     const q=quote(t,x),e=$('c-'+x.id),mx=!!q.full,n=S[t][x.id];
     $('p-'+x.id).textContent=mx?'MAX':(q.k>1?'×'+q.k+' · ':'')+fmt(q.cost);$('n-'+x.id).textContent=n+(x.max?'/'+x.max:'');
     e.classList.toggle('off',mx||S.kids<q.cost);
     e.dataset.tier=n>=100?3:n>=50?2:n>=25?1:0;
+    const lk=n===0&&(t==='b'?bCost(x):uCost(x))>S.peak*30+2000;
+    e.classList.toggle('lk',lk);e.title=lk?'Keep earning to reveal this!':'';
     e.style.setProperty('--p',mx?'0%':Math.min(100,S.kids/q.cost*100)+'%');
   }));
 }
 
 // ----- clicking & production (time-based so background tabs don't lose kids) -----
 $('kid').addEventListener('click',e=>{
-  let p=clickPow();const crit=Math.random()<Math.min(.5,.02*S.u.crit);if(crit)p*=5;S.kids+=p;S.total+=p;S.clicks++;clickSound();
+  let p=clickPow();const crit=Math.random()<Math.min(.5,.02*S.u.crit+.01*(S.perks.touch||0));if(crit)p*=5;S.kids+=p;S.total+=p;S.clicks++;clickSound();
   if(S.ch==='mix')$('kid').textContent=['👦','👧','🧒','👶'][Math.random()*4|0];
   render();float(e.clientX,e.clientY,p,crit);burst(e.clientX,e.clientY,crit);$('kids').animate([{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:140});
 });
@@ -304,6 +322,11 @@ function float(x,y,p,c){
   t.className='float';t.textContent=(c?'💥 ':'')+'+'+fd(p);t.style.left=(x-r.left-15)+'px';t.style.top=(y-r.top-15)+'px';
   z.appendChild(t);setTimeout(()=>t.remove(),900);
 }
+$('kid').tabIndex=0;
+$('kid').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();const r=$('kid').getBoundingClientRect();
+    $('kid').dispatchEvent(new MouseEvent('click',{clientX:r.left+r.width/2,clientY:r.top+r.height/3}))}
+});
 function burst(x,y,c){
   const n=c?8:4,em=c?['💥','⭐','✨']:['✨','⭐'];
   for(let i=0;i<n;i++){
@@ -349,7 +372,7 @@ function spawnBus(){
   const gone=setTimeout(()=>{b.remove();scheduleBus()},10000+1000*Math.min(10,S.u.goldbus));
   b.onclick=()=>{
     clearTimeout(gone);
-    const bonus=Math.max(50,kpsNow()*60)*(1+.25*S.u.busup);S.kids+=bonus;S.total+=bonus;S.bus++;beep(900,.2);render();
+    const bonus=Math.max(50,kpsNow()*60)*(1+.25*S.u.busup)*(1+.1*(S.perks.alumni||0));S.kids+=bonus;S.total+=bonus;S.bus++;beep(900,.2);render();
     b.textContent='+'+fmt(bonus);b.style.fontSize='1.8rem';b.style.pointerEvents='none';
     setTimeout(()=>{b.remove();scheduleBus()},900);
   };
@@ -367,7 +390,7 @@ function spawnCandy(){
     const r=Math.random();let msg;
     if(r<.4){rushT=Date.now()+30000;msg='🍬 Sugar Rush! ×7 kids/sec for 30s'}
     else if(r<.75){frenzyT=Date.now()+20000;msg='💥 Click Frenzy! ×10 per click for 20s'}
-    else{const g=Math.max(100,kpsNow()*600);S.kids+=g;S.total+=g;msg='🎁 Lucky Drop! +'+fmt(g)+' kids'}
+    else{const g=Math.max(100,kpsNow()*600)*(1+.1*(S.perks.alumni||0));S.kids+=g;S.total+=g;msg='🎁 Lucky Drop! +'+fmt(g)+' kids'}
     toast(msg);beep(1100,.2);confetti(16);b.remove();scheduleCandy();render();save();
   };
   $('zone').appendChild(b);
@@ -509,13 +532,13 @@ function renderMusic(p){
 $('grad').onclick=()=>{
   if(pending()<1)return;
   if(!gradArm){gradArm=1;$('grad').textContent='Click again to confirm!';setTimeout(()=>{gradArm=0},3000);return}
-  S.dip+=pending();fresh();gradArm=0;
+  S.dip+=pending();fresh();S.kids=500*(S.perks.head||0);gradArm=0;
   toast('🎓 Graduated! Each diploma gives +2% production');beep(900,.25);confetti(40);render();save();
 };
 
 // ----- settings -----
 let tab='bg';
-const TABS=[['bg','🎨 Scenes'],['kids','👦 Kids'],['music','🎵 Music'],['cursor','🖱️ Cursors'],['ach','🏆 Awards'],['board','🏅 Board'],['saves','💾 Saves'],['extra','🌗 Extras']];
+const TABS=[['bg','🎨 Scenes'],['kids','👦 Kids'],['music','🎵 Music'],['cursor','🖱️ Cursors'],['ach','🏆 Awards'],['perks','🎓 Perks'],['board','🏅 Board'],['saves','💾 Saves'],['extra','🌗 Extras']];
 function listCard(title,sub,right,own,fn,off){
   const el=document.createElement('div');el.className='card'+(off?' off':'');
   el.innerHTML=`<div><h3>${title}</h3><p>${sub}</p></div><div class="cost${own?' own':''}">${right}</div>`;el.onclick=fn;return el;
@@ -538,6 +561,7 @@ function renderSet(){
   if(tab==='bg')p.appendChild(ownable(BGS,S.bgs,0,'bg'));
   else if(tab==='kids')p.appendChild(ownable(CHARS,S.chars,0,'ch',0,x=>x.m>1?'×'+(+x.m.toFixed(3))+' production · ':''));
   else if(tab==='ach')renderAch(p);
+  else if(tab==='perks')renderPerks(p);
   else if(tab==='music')renderMusic(p);
   else if(tab==='cursor')renderCur(p);
   else if(tab==='board')renderBoardPane(p);
@@ -550,7 +574,34 @@ function renderSet(){
     });
     $('autoBtn').textContent='🤖 Auto clicker: '+(S.auto?'ON':'OFF');
     $('autoBtn').onclick=()=>{S.auto=!S.auto;renderSet();save()};
+    p.insertAdjacentHTML('beforeend','<div class="sec">Backup</div><div class="row"><button class="pbtn" id="expBtn" style="flex:1">Export code</button><button class="pbtn" id="impBtn" style="flex:1">Import code</button></div><textarea id="bk" rows="3" style="width:100%;border-radius:10px;border:2px solid var(--cb);background:var(--card);color:var(--ink);padding:6px;font-size:.75rem" placeholder="Your save code shows here. Paste a code and tap Import."></textarea><div class="sec">Danger zone</div><button class="pbtn" id="rstBtn" style="width:100%;background:#d63031">Reset this save</button>');
+    $('expBtn').onclick=()=>{
+      S.last=Date.now();$('bk').value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));$('bk').select();
+      const fail=()=>toast('Code is selected — copy it manually');
+      try{navigator.clipboard.writeText($('bk').value).then(()=>toast('📋 Code copied'),fail)}catch(e){fail()}
+    };
+    $('impBtn').onclick=()=>{
+      try{
+        const d=JSON.parse(decodeURIComponent(escape(atob($('bk').value.trim()))));
+        if(typeof d!=='object'||!d)throw 0;
+        localStorage.setItem(slotKey(slot),JSON.stringify(d));freshAll();load();applyLook();applyName();renderSet();toast('✅ Save imported');
+      }catch(e){toast('That code does not look right')}
+    };
+    $('rstBtn').onclick=()=>{
+      if(armed!=='rst'){armed='rst';$('rstBtn').textContent='Tap again to reset everything';setTimeout(()=>{if(armed==='rst'){armed='';renderSet()}},3000);return}
+      armed='';delSlot(slot);closeSet();
+    };
   }
+}
+function renderPerks(p){
+  const have=S.dip-S.dspent;
+  p.innerHTML=`<div class="sec">🎓 ${have} diplomas to spend (spending never lowers your +2% each)</div>`;
+  PERKS.forEach(x=>{
+    const L=S.perks[x.id]||0,full=L>=x.max,c=L+1;
+    p.appendChild(listCard(x.e+' '+x.n+' · Lv '+L+'/'+x.max,x.d,full?'MAX':'🎓 '+c,1,()=>{
+      if(full||have<c)return;S.dspent+=c;S.perks[x.id]=L+1;beep(800,.1);toast('🎓 '+x.n+' level '+(L+1));renderSet();render();save();
+    },full||have<c));
+  });
 }
 function renderAch(p){
   const n=Object.keys(S.ach).length;
@@ -625,7 +676,7 @@ function load(){
     ['kids','total','dip','bus','clicks','last'].forEach(k=>{const v=+d[k];S[k]=isFinite(v)&&v>0?v:0});
     S.ach=d.ach||{};S.bgs=d.bgs||{meadow:1};S.bg=BGS.some(x=>x.id===d.bg)?d.bg:'meadow';
     S.chars=d.chars||{mix:1};S.ch=CHARS.some(x=>x.id===d.ch)?d.ch:'mix';
-    S.music=d.music!==false;S.mood=MOODS.some(x=>x.id===d.mood)?d.mood:'chill';S.mvol=d.mvol!=null?+d.mvol:.7;S.svol=d.svol!=null?+d.svol:.5;S.cur=d.cur||'def';S.pname=d.pname||'';S.best=+d.best||0;S.candy=+d.candy||0;S.theme=d.theme||'auto';S.snd=d.snd!==false;S.auto=!!d.auto;
+    S.music=d.music!==false;S.mood=MOODS.some(x=>x.id===d.mood)?d.mood:'chill';S.mvol=d.mvol!=null?+d.mvol:.7;S.svol=d.svol!=null?+d.svol:.5;S.cur=d.cur||'def';S.pname=d.pname||'';S.best=+d.best||0;S.candy=+d.candy||0;S.perks=d.perks||{};S.dspent=+d.dspent||0;S.peak=+d.peak||0;S.theme=d.theme||'auto';S.snd=d.snd!==false;S.auto=!!d.auto;
     BUILD.forEach(x=>S.b[x.id]=Math.max(0,+(d.b&&d.b[x.id])||0));
     UPG.forEach(x=>S.u[x.id]=Math.max(0,+(d.u&&d.u[x.id])||0));
   }catch(e){}
@@ -648,7 +699,7 @@ function renderCur(p){
 }
 // ----- 3 save slots -----
 function freshAll(){
-  Object.assign(S,{name:'',kids:0,total:0,dip:0,bus:0,clicks:0,ach:{},bgs:{meadow:1},bg:'meadow',chars:{mix:1},ch:'mix',pname:'',best:0,candy:0,auto:false,last:0});fresh();
+  Object.assign(S,{name:'',kids:0,total:0,dip:0,bus:0,clicks:0,ach:{},bgs:{meadow:1},bg:'meadow',chars:{mix:1},ch:'mix',pname:'',best:0,candy:0,perks:{},dspent:0,peak:0,auto:false,last:0});fresh();
 }
 function switchSlot(n){
   save();slot=n;try{localStorage.setItem('kc_active',n)}catch(e){}
