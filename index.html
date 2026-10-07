@@ -219,7 +219,7 @@ const gm=()=>(1+.1*S.u.teacher)*(1+.05*S.u.snack)*dipB()*(1+.05*Math.min(20,S.u.
 const kpsNow=()=>BUILD.reduce((a,x)=>a+S.b[x.id]*x.kps,0)*gm();
 const clickPow=()=>(Date.now()<frenzyT?10:1)*(1+S.u.hands+S.u.sticker*3+S.u.mega*25+S.u.sprinkle*100+S.u.goldstar*10+S.u.cape*500)*devMult*chMult()+S.u.crayon*.01*kpsNow();
 const autoPow=()=>clickPow()*.5*(1+.2*Math.min(10,S.u.coach)); // auto-clicker: 10 half-power clicks/sec (was 33 full-power)
-const pending=()=>Math.floor(Math.sqrt(S.total/1e7));
+const pending=()=>Math.floor(Math.cbrt(S.total/1e10));
 
 // ----- achievements -----
 const ACH=[],add=(id,n,d,val,goal)=>ACH.push({id,n,d,val,goal});
@@ -301,7 +301,7 @@ function render(){
   const nw=[];ACH.forEach(a=>{if(!S.ach[a.id]&&a.val()>=a.goal){S.ach[a.id]=1;nw.push(a)}});
   if(nw.length){toast('🏆 '+nw[0].n+(nw.length>1?' +'+(nw.length-1)+' more':'')+' unlocked!');beep(1000,.15);confetti(Math.min(30,14*nw.length))}
   const p=pending();$('grad').disabled=p<1;
-  if(!gradArm)$('grad').textContent=innerWidth<=700?`🎓 +${p} 🏅`:`🎓 Graduate (+${p} 🏅, have ${S.dip})`;
+  if(!gradArm)$('grad').textContent=innerWidth<=700?`🎓 +${p} 🏅`:p<1?'🎓 Graduate (needs 10B this run)':`🎓 Graduate (+${p} 🏅, have ${S.dip})`;
   [['b',BUILD,bCost],['u',UPG,uCost]].forEach(([t,list,f])=>list.forEach(x=>{
     const q=quote(t,x),e=$('c-'+x.id),mx=!!q.full,n=S[t][x.id];
     $('p-'+x.id).textContent=mx?'MAX':(q.k>1?'×'+q.k+' · ':'')+fmt(q.cost);$('n-'+x.id).textContent=n+(x.max?'/'+x.max:'');
@@ -576,7 +576,7 @@ function renderSet(){
     });
     $('autoBtn').textContent='🤖 Auto clicker: '+(S.auto?'ON':'OFF');
     $('autoBtn').onclick=()=>{S.auto=!S.auto;renderSet();save()};
-    p.insertAdjacentHTML('beforeend','<div class="sec">Backup</div><div class="row"><button class="pbtn" id="expBtn" style="flex:1">Export code</button><button class="pbtn" id="impBtn" style="flex:1">Import code</button></div><textarea id="bk" rows="3" style="width:100%;border-radius:10px;border:2px solid var(--cb);background:var(--card);color:var(--ink);padding:6px;font-size:.75rem" placeholder="Your save code shows here. Paste a code and tap Import."></textarea><div class="sec">Danger zone</div><button class="pbtn" id="rstBtn" style="width:100%;background:#d63031">Reset this save</button>');
+    p.insertAdjacentHTML('beforeend','<div class="sec">Backup</div><div class="row"><button class="pbtn" id="expBtn" style="flex:1">Export code</button><button class="pbtn" id="impBtn" style="flex:1">Import code</button></div><textarea id="bk" rows="3" style="width:100%;border-radius:10px;border:2px solid var(--cb);background:var(--card);color:var(--ink);padding:6px;font-size:.75rem" placeholder="Your save code shows here. Paste a code and tap Import."></textarea><div class="sec">Danger zone</div><button class="pbtn" id="rstDip" style="width:100%;background:#e17055;margin-bottom:8px">Reset diplomas &amp; perks</button><button class="pbtn" id="rstBtn" style="width:100%;background:#d63031">Reset this save</button>');
     $('expBtn').onclick=()=>{
       S.last=Date.now();$('bk').value=btoa(unescape(encodeURIComponent(JSON.stringify(S))));$('bk').select();
       const fail=()=>toast('Code is selected — copy it manually');
@@ -592,6 +592,10 @@ function renderSet(){
     $('rstBtn').onclick=()=>{
       if(armed!=='rst'){armed='rst';$('rstBtn').textContent='Tap again to reset everything';setTimeout(()=>{if(armed==='rst'){armed='';renderSet()}},3000);return}
       armed='';delSlot(slot);closeSet();
+    };
+    $('rstDip').onclick=()=>{
+      if(armed!=='rdip'){armed='rdip';$('rstDip').textContent='Tap again to wipe diplomas';setTimeout(()=>{if(armed==='rdip'){armed='';renderSet()}},3000);return}
+      armed='';S.dip=0;S.dspent=0;S.perks={};toast('🎓 Diplomas and perks reset');render();save();renderSet();
     };
   }
 }
