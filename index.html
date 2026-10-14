@@ -797,3 +797,58 @@ if(S.last){
 }
 if(S.name){$('modal').style.display='none';applyName()}else askName();
 </script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Launcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Launch App Safely</h2>
+    <!-- Clicking this button opens the target site inside a cloaked window -->
+    <button onclick="launchCloakedWindow()">Launch Game</button>
+
+    <script>
+        function launchCloakedWindow() {
+            // Replace with your actual GitHub game URL
+            const targetUrl = "https://github.io"; 
+
+            // Opens a brand new, completely blank browser tab
+            const win = window.open('about:blank', '_blank');
+
+            // Ensure the window opened successfully before injecting content
+            if (win) {
+                win.document.body.style.margin = '0';
+                win.document.body.style.height = '100vh';
+                
+                // Create an iframe that fills the entire blank window
+                const iframe = win.document.createElement('iframe');
+                iframe.style.border = 'none';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.src = targetUrl;
+
+                // Inject the iframe into the about:blank page
+                win.document.body.appendChild(iframe);
+            } else {
+                alert("Pop-up blocked! Please allow pop-ups for this site.");
+            }
+        }
+    </script>
+
+</body>
+</html>
